@@ -10,5 +10,8 @@
       "cjs",
       "global"
     ]
+  },
+  "dependencies": {
+    "@vue/shared": "^1.0.0"
   }
 }

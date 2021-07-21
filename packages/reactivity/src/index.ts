@@ -1,2 +1,3 @@
-console.log('1112');
-new WeakMap()
+export * from './reactive';
+
+export { effect } from './effect';
