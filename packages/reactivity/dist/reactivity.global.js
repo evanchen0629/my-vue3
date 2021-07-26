@@ -225,9 +225,50 @@ var VueReactivity = (function (exports) {
   }
   // 数组，对象是如何劫持 effect 的实现 ref的实现。。。
 
+  function ref(value) {
+      // 可以传入对象
+      // 把普通值变成一个引用类型, 让一个普通值也具备响应式的能力
+      return createRef(value);
+  }
+  // ts 中实现类的话 私有属性必须要先声明才能使用
+  var convert = function (v) { return (isObject(v) ? reactive(v) : v); };
+  var RefImpl = /** @class */ (function () {
+      // public rawValue
+      function RefImpl(rawValue, shallow) {
+          this.rawValue = rawValue;
+          this.shallow = shallow;
+          this.__v_isRef = true; // 表示他是一个ref
+          this._value = shallow ? rawValue : convert(rawValue);
+          // this.rawValue = rawValue
+      }
+      Object.defineProperty(RefImpl.prototype, "value", {
+          get: function () {
+              // 收集依赖
+              track(this, 'get', 'value');
+              return this._value;
+          },
+          set: function (newValue) {
+              // 触发依赖
+              if (hasChanged(newValue, this.rawValue)) {
+                  this.rawValue = newValue; // 用于下次比对
+                  this._value = this.shallow ? newValue : convert(newValue);
+                  trigger(this, 'set', 'value', newValue);
+              }
+          },
+          enumerable: false,
+          configurable: true
+      });
+      return RefImpl;
+  }());
+  function createRef(value, shallow) {
+      if (shallow === void 0) { shallow = false; }
+      return new RefImpl(value, shallow); // 借助类的属性访问器
+  }
+
   exports.effect = effect;
   exports.reactive = reactive;
   exports.readonly = readonly;
+  exports.ref = ref;
   exports.shallowReactive = shallowReactive;
   exports.shallowReadonly = shallowReadonly;
 
