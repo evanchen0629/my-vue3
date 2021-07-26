@@ -1,4 +1,4 @@
-import { hasChanged, isObject } from '@vue/shared';
+import { hasChanged, isArray, isObject } from '@vue/shared';
 import { track, trigger } from './effect';
 import { reactive } from './reactive';
 
@@ -40,4 +40,26 @@ class RefImpl {
 }
 function createRef(value, shallow = false) {
   return new RefImpl(value, shallow); // 借助类的属性访问器
+}
+
+class ObjectRefImpl {
+  public __v_isRef = true;
+  constructor(public target, public key) {}
+  get value() {
+    return this.target[this.key];
+  }
+  set value(newValue) {
+    this.target[this.key] = newValue;
+  }
+}
+export function toRef(target, key) {
+  return new ObjectRefImpl(target, key);
+}
+
+export function toRefs(target) {
+  const res = isArray(target) ? new Array(target.length) : {};
+  for (let key in target) {
+    res[key] = toRef(target, key);
+  }
+  return res;
 }
